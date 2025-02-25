@@ -1,0 +1,32 @@
+# Created by Qoliber
+#
+# @author Lukasz Owczarczuk <lowczarczuk@qoliber.com>
+
+autoloaders_psr4:
+  Qoliber\Magerun\: "%module%/src"
+
+# bash scripts available
+# bash lib/n98-magerun2/modules/qoliber-magerun/bin/scripts/qoliber-db-dump.sh
+# bash lib/n98-magerun2/modules/qoliber-magerun/bin/scripts/qoliber-remove-db-dump.sh
+# bash lib/n98-magerun2/modules/qoliber-magerun/bin/scripts/qoliber-media-dump.sh
+# bash lib/n98-magerun2/modules/qoliber-magerun/bin/scripts/qoliber-media-db-dump.sh
+
+# new commands
+commands:
+   customCommands:
+     # php lib/n98-magerun2/modules/qoliber-magerun/bin/n98-magerun2.phar qoliber:magerun:locale:active
+     - Qoliber\Magerun\Themes\DeployLocaleActiveCommand
+     # php lib/n98-magerun2/modules/qoliber-magerun/bin/n98-magerun2.phar qoliber:magerun:theme:active
+     - Qoliber\Magerun\Themes\DevThemeActiveCommand
+     # php lib/n98-magerun2/modules/qoliber-magerun/bin/n98-magerun2.phar qoliber:magerun:mode:production
+     - Qoliber\Magerun\Themes\ProductionModeCommand
+     # php lib/n98-magerun2/modules/qoliber-magerun/bin/n98-magerun2.phar qoliber:magerun:non-composer-autoloader
+     - Qoliber\Magerun\Themes\NonComposerAutoloader
+
+   # php lib/n98-magerun2/modules/qoliber-magerun/bin/n98-magerun2.phar db:dump --strip="@qoliber" --no-tablespaces --compression="gz" -f db.sql
+   N98\Magento\Command\Database\DumpCommand:
+     table-groups:
+       - id: "qoliber"
+         description: "Removes tables for Qoliber Development"
+         tables: "4mage_price_tracker l5ba_order_detail l5ba_orders amasty_gdprcookie_cookie_consent_status amasty_gdprcookie_cookie_consents navireo_order_docs amasty_amcheckout_order_custom_fields amasty_amcheckout_quote_custom_fields zzz_RtnetExportedOrders m2its_import_schedule import_history *captcha* amazon_customer *_index_store* elgentos_serversideanalytics_sales_order *_bcu *_bk *_BK *_bks *_BKS *_old amasty_amcheckout_additional order_sources smartmage_inpost_shipment_order_link newsletter_queue_link aw_osc_checkout_data_completeness smartmage_inpost_shipment googleoptimizer_code inventory_shipment_source etsy_orders aw_ar_reminder_review_order_item stripe_webhook_events stripe_customers stripe_payment_intents bss_product_alert_stock stripe_payment_elements stripe_payment_methods shipperhq_* mfy_poll_vote mfy_children_salon_order_attrs mfy_checkout_delivery_notes importexport_importdata odoo_error_records queue_lock plumrocket_sociallogin_account ometria_queue salesrule_coupon_usage cryozonic_stripe_customers elasticsuite_tracker_log_* catalog_data_exporter_* aaa_order aaa_order_updated_at algoliasearch_queue algoliasearch_queue_log *bazinga* *_log *_temp *_test @2fa @aggregated @ee_changelog @idx @oauth @replica @search @stripped @trade adminnotification_inbox am_customform_answer amasty_amdeliverydate_deliverydate amasty_audit_* amasty_blog_views amasty_conditions_quote amasty_customer_attributes_guest amasty_customer_attributes_quote_address amasty_fpc_activity amasty_fpc_log amasty_order_attribute_entity amasty_order_attribute_grid_flat amasty_orderachive* amasty_orderattr_order_attribute_value amazon_sales_order aw_ar_email_queue aw_ar_email_subscriber aw_coupongenerator_coupon aw_fue2_event_history aw_fue2_event_queue aw_rp_* bank_recipt bf_question bss_inventoryreport catalog_compare_item ced_amazon_* ced_integrator_* cron_schedule downloadable_link_purchased ebaymultiaccount_* gift_message inchoo_customer_ticket inchoo_customer_ticket_reply kl_events kl_sync login_as_customer* m2epro_* magefan_gtm_transaction *_bulk *_batches *_sequence magento_operation mageplaza_giftcard* mageplaza_smtp_log meetanshi_mobilelogin* meetanshi_sms* menastore_customer_notifications mollie_* mst_email_unsubscription mst_event_event mst_gdpr_consent mst_helpdesk* mst_message_queue mst_misspell_* mst_related_analytics mst_rma* mst_search* mst_seo* password_reset_request_event phpcuong_* queue_message queue_message_status redchamps_guest_orders revolut_payment_order_details sagepaysuite_token tamara_* xtento_customsmtp_emaillog xtento_orderexport_profile_history yotpo_order_status_history"
+

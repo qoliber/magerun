@@ -1,0 +1,34 @@
+{
+  "name": "qoliber/magerun",
+  "version": "1.0.2",
+  "source": {
+    "type": "git",
+    "url": "git@bitbucket.org:qoliber/magerun.git",
+    "reference": "master"
+  },
+  "authors": [
+    {
+      "name": "qoliber",
+      "email": "contact@qoliber.com"
+    }
+  ],
+  "license": "OSL-3.0",
+  "type": "magento2-component",
+  "autoload": {
+    "psr-4": {
+      "Qoliber\\Magerun\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=7.4",
+    "magento/magento-composer-installer": "*"
+  },
+  "extra": {
+    "map": [
+      [
+        "*",
+        "lib/n98-magerun2/modules/qoliber-magerun"
+      ]
+    ]
+  }
+}
