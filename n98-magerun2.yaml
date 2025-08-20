@@ -9,6 +9,7 @@ autoloaders_psr4:
 # bash lib/n98-magerun2/modules/qoliber-magerun/bin/scripts/qoliber-db-dump.sh
 # bash lib/n98-magerun2/modules/qoliber-magerun/bin/scripts/qoliber-remove-db-dump.sh
 # bash lib/n98-magerun2/modules/qoliber-magerun/bin/scripts/qoliber-media-dump.sh
+# bash lib/n98-magerun2/modules/qoliber-magerun/bin/scripts/qoliber-media-without-catalog-dump.sh
 # bash lib/n98-magerun2/modules/qoliber-magerun/bin/scripts/qoliber-media-db-dump.sh
 
 # new commands
