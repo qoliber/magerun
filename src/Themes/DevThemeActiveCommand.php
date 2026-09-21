@@ -7,6 +7,7 @@
 
 namespace Qoliber\Magerun\Themes;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ObjectManager;
 use N98\Magento\Command\AbstractMagentoCommand;
 use N98\Util\Console\Helper\Table\Renderer\RendererFactory;
@@ -17,6 +18,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class DevThemeActiveCommand extends AbstractMagentoCommand
 {
+    /** @var string Config path MageOS' admin theme switcher stores the active admin theme under */
+    private const XML_PATH_ADMIN_ACTIVE_THEME = 'admin/system_admin_design/active_theme';
+
+    /** @var string Stock admin theme - always deployed so the admin can be switched back to it */
+    private const ADMIN_FALLBACK_THEME = 'Magento/backend';
+
     /**
      * Configure Command
      *
@@ -89,6 +96,15 @@ class DevThemeActiveCommand extends AbstractMagentoCommand
                 }
             }
 
+            if (is_null($area) || $area === AreaCodes::ADMINHTML) {
+                $res = array_merge(
+                    $res,
+                    $this->getAdminThemes($objectManager, $connection, $themeTableName, $configTableName)
+                );
+            }
+
+            $res = array_values(array_unique(array_filter($res)));
+
             if (!$input->getOption('format')) {
                 $out = array();
 
@@ -96,10 +112,7 @@ class DevThemeActiveCommand extends AbstractMagentoCommand
                     $out[] = '--theme ' . $t;
                 }
 
-                if (is_null($area) || $area === AreaCodes::ADMINHTML) {
-                    $out[] = '--theme Magento/backend';
-                }
-                $output->writeln(implode(' ', array_unique($out)));
+                $output->writeln(implode(' ', $out));
             }
 
             if ($input->getOption('format') == 'json') {
@@ -111,5 +124,84 @@ class DevThemeActiveCommand extends AbstractMagentoCommand
         } else {
             return Command::FAILURE;
         }
+    }
+
+    /**
+     * Get Admin Themes To Deploy
+     *
+     * The active admin theme is never stored under `design/theme/theme_id`, so the
+     * theme query in execute() can never find it. Magento takes its admin theme from
+     * di.xml, and MageOS switches it through `admin/system_admin_design/active_theme`
+     * - which is why MageOS/m137-admin-theme was silently left out of
+     * setup:static-content:deploy and shipped uncompiled.
+     *
+     * Two sources are used, because neither alone is enough:
+     *  - ScopeConfig, which resolves the config.xml default. MageOS ships the theme
+     *    as a default only, so on a stock install there is no DB row to find.
+     *  - core_config_data, read directly, which catches a theme switched in the admin.
+     *    The deploy runs before the cache is flushed, so a stale config cache must
+     *    never decide what gets compiled.
+     *
+     * `Magento/backend` always stays in the list - it is the parent theme and the
+     * admin can be switched back to it at any time, so its static content must exist.
+     *
+     * @param \Magento\Framework\ObjectManagerInterface $objectManager
+     * @param \Magento\Framework\DB\Adapter\AdapterInterface $connection
+     * @param string $themeTableName
+     * @param string $configTableName
+     *
+     * @return string[]
+     */
+    private function getAdminThemes(
+        $objectManager,
+        $connection,
+        string $themeTableName,
+        string $configTableName
+    ): array {
+        $themes = [self::ADMIN_FALLBACK_THEME];
+
+        $candidates = [
+            $objectManager->get(ScopeConfigInterface::class)->getValue(
+                self::XML_PATH_ADMIN_ACTIVE_THEME,
+                ScopeConfigInterface::SCOPE_TYPE_DEFAULT
+            ),
+            $connection->fetchOne(
+                sprintf(
+                    'SELECT `value` FROM `%s` WHERE `path` = ? AND `scope` = ?'
+                    . ' ORDER BY `config_id` DESC',
+                    $configTableName
+                ),
+                [self::XML_PATH_ADMIN_ACTIVE_THEME, ScopeConfigInterface::SCOPE_TYPE_DEFAULT]
+            ),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (!is_string($candidate) || trim($candidate) === '') {
+                continue;
+            }
+
+            $candidate = trim($candidate);
+
+            if (in_array($candidate, $themes, true)) {
+                continue;
+            }
+
+            // Only deploy a theme that is really registered for the admin area.
+            // setup:upgrade has already synced the theme table by the time this runs,
+            // so a stale config value is a typo - not a reason to fail the deploy.
+            $isRegistered = (bool)$connection->fetchOne(
+                sprintf(
+                    'SELECT COUNT(*) FROM `%s` WHERE `theme_path` = ? AND `area` = ?',
+                    $themeTableName
+                ),
+                [$candidate, AreaCodes::ADMINHTML]
+            );
+
+            if ($isRegistered) {
+                $themes[] = $candidate;
+            }
+        }
+
+        return $themes;
     }
 }
