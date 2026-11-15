@@ -83,7 +83,7 @@ class DeployLocaleActiveCommand extends AbstractMagentoCommand
             $adminLocales
         );
 
-        return array_map(
+        return array_values(array_map(
             function ($locale) {
                 if (!$this->locale->isValid($locale)) {
                     throw new \InvalidArgumentException(
@@ -95,7 +95,7 @@ class DeployLocaleActiveCommand extends AbstractMagentoCommand
                 return $locale;
             },
             array_unique($usedLocales)
-        );
+        ));
     }
 
     /**
